@@ -63,6 +63,7 @@ export const Login = ({ onLogin }) => {
         lastName: localUser.lastName,
         username: localUser.username,
         email: localUser.email,
+        phone: localUser.phone,
       });
       return;
     }

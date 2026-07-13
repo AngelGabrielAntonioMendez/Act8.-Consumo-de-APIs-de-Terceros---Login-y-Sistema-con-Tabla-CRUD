@@ -1,5 +1,5 @@
 export const Sidebar = ({ onLogout, activeTab, setActiveTab }) => {
-  const menuItems = ['Dashboard', 'Usuarios', 'Productos', 'Reportes', 'Configuración'];
+  const menuItems = ['Dashboard', 'Usuarios', 'Productos', 'Reportes', 'Configuracion'];
 
   return (
     <aside className="sidebar">
@@ -15,15 +15,9 @@ export const Sidebar = ({ onLogout, activeTab, setActiveTab }) => {
         <ul>
           {menuItems.map((item) => (
             <li key={item} className={activeTab === item ? 'active' : ''}>
-              <a 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault(); 
-                  setActiveTab(item); 
-                }}
-              >
+              <button type="button" onClick={() => setActiveTab(item)}>
                 {item}
-              </a>
+              </button>
             </li>
           ))}
         </ul>
@@ -31,7 +25,7 @@ export const Sidebar = ({ onLogout, activeTab, setActiveTab }) => {
 
       <div className="sidebar-footer">
         <button onClick={onLogout} className="btn-logout-sidebar">
-          Cerrar sesión
+          Cerrar sesion
           <span>Volver al login</span>
         </button>
       </div>

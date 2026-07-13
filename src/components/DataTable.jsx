@@ -4,18 +4,15 @@ export const DataTable = () => {
   const getParams = () => new URLSearchParams(window.location.search);
   const [page, setPage] = useState(Number(getParams().get('page')) || 1);
   const [limit, setLimit] = useState(Number(getParams().get('limit')) || 10);
-
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); 
+  const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({ title: '', price: '', category: '' });
 
   useEffect(() => {
@@ -27,16 +24,16 @@ export const DataTable = () => {
 
   useEffect(() => {
     fetch('https://dummyjson.com/products/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error("Error cargando categorías:", err));
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((fetchError) => console.error('Error cargando categorias:', fetchError));
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError('');
-      
+
       const skip = (page - 1) * limit;
       let url = `https://dummyjson.com/products?limit=${limit}&skip=${skip}`;
 
@@ -52,70 +49,77 @@ export const DataTable = () => {
         const data = await response.json();
         setProducts(data.products);
         setTotal(data.total);
-      } catch (err) {
-        setError(err.message);
+      } catch (fetchError) {
+        setError(fetchError.message);
       } finally {
         setLoading(false);
       }
     };
 
-    const timeoutId = setTimeout(() => { fetchData(); }, 300);
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 300);
+
     return () => clearTimeout(timeoutId);
   }, [page, limit, search, category]);
 
-
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar este producto?")) return;
+    if (!window.confirm('Estas seguro de eliminar este producto?')) return;
 
     try {
       await fetch(`https://dummyjson.com/products/${id}`, { method: 'DELETE' });
-      setProducts(products.filter(p => p.id !== id));
+      setProducts(products.filter((product) => product.id !== id));
       setTotal(total - 1);
-      alert("Registro eliminado exitosamente.");
-    } catch (err) {
-      alert("Error al eliminar");
+      alert('Registro eliminado exitosamente.');
+    } catch {
+      alert('Error al eliminar');
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!window.confirm(`¿Estás seguro de ${editingProduct ? 'editar' : 'agregar'} este registro?`)) return;
+    if (!window.confirm(`Estas seguro de ${editingProduct ? 'editar' : 'agregar'} este registro?`)) return;
 
     try {
       if (editingProduct) {
-        // EDITAR (PUT)
         const res = await fetch(`https://dummyjson.com/products/${editingProduct.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(formData),
         });
         const updatedProduct = await res.json();
-        
-        setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...updatedProduct } : p));
-        alert("Registro actualizado.");
+
+        setProducts(products.map((product) => (
+          product.id === editingProduct.id ? { ...product, ...updatedProduct } : product
+        )));
+        alert('Registro actualizado.');
       } else {
         const res = await fetch('https://dummyjson.com/products/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(formData),
         });
         const newProduct = await res.json();
-        
-        newProduct.id = Date.now(); 
-        
+
+        newProduct.id = Date.now();
+
         setProducts([newProduct, ...products]);
         setTotal(total + 1);
-        alert("Registro agregado.");
+        alert('Registro agregado.');
       }
       setIsModalOpen(false);
-    } catch (err) {
-      alert("Error al guardar el registro");
+    } catch {
+      alert('Error al guardar el registro');
     }
   };
 
   const openModal = (product = null) => {
     setEditingProduct(product);
-    setFormData(product ? { title: product.title, price: product.price, category: product.category } : { title: '', price: '', category: '' });
+    setFormData(
+      product
+        ? { title: product.title, price: product.price, category: product.category }
+        : { title: '', price: '', category: '' }
+    );
     setIsModalOpen(true);
   };
 
@@ -124,32 +128,42 @@ export const DataTable = () => {
   return (
     <div className="table-module">
       <div className="table-header-actions">
-        {}
+        <div>
+          <h3>Productos</h3>
+          <p>Consulta, filtra y administra productos desde la API.</p>
+        </div>
+
         <div className="filters">
-          <input 
-            type="text" 
-            placeholder="Buscar producto..." 
+          <input
+            type="text"
+            placeholder="Buscar producto..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setCategory(''); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCategory('');
+              setPage(1);
+            }}
           />
-          <select 
-            value={category} 
-            onChange={(e) => { setCategory(e.target.value); setSearch(''); setPage(1); }}
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setSearch('');
+              setPage(1);
+            }}
           >
-            <option value="">Todas las categorías</option>
+            <option value="">Todas las categorias</option>
             {categories.map((cat, idx) => (
               <option key={idx} value={cat.slug || cat}>{cat.name || cat}</option>
             ))}
           </select>
+          <button onClick={() => openModal()} className="btn-primary small-button">Nuevo producto</button>
         </div>
-        <button onClick={() => openModal()} className="btn-primary">➕ Nuevo Producto</button>
       </div>
 
-      {}
-      {loading && <div className="loading-state">⏳ Cargando datos...</div>}
-      {error && <div className="error-alert">❌ {error}</div>}
+      {loading && <div className="loading-state">Cargando datos...</div>}
+      {error && <div className="error-alert">{error}</div>}
 
-      {}
       {!loading && !error && (
         <div className="table-container">
           <table className="data-table">
@@ -157,7 +171,7 @@ export const DataTable = () => {
               <tr>
                 <th>ID</th>
                 <th>Producto</th>
-                <th>Categoría</th>
+                <th>Categoria</th>
                 <th>Precio</th>
                 <th>Acciones</th>
               </tr>
@@ -182,11 +196,13 @@ export const DataTable = () => {
         </div>
       )}
 
-      {}
       <div className="pagination">
         <div className="limit-selector">
-          Mostrar: 
-          <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}>
+          Mostrar:
+          <select value={limit} onChange={(e) => {
+            setLimit(Number(e.target.value));
+            setPage(1);
+          }}>
             <option value={10}>10</option>
             <option value={20}>20</option>
             <option value={40}>40</option>
@@ -195,28 +211,27 @@ export const DataTable = () => {
         </div>
         <div className="page-controls">
           <button disabled={page === 1} onClick={() => setPage(page - 1)}>Anterior</button>
-          <span>Página {page} de {totalPages || 1}</span>
+          <span>Pagina {page} de {totalPages || 1}</span>
           <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Siguiente</button>
         </div>
       </div>
 
-      {}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h2>
+            <h2>{editingProduct ? 'Editar producto' : 'Nuevo producto'}</h2>
             <form onSubmit={handleSave} className="crud-form">
               <div className="form-group">
-                <label>Nombre del Producto</label>
-                <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+                <label>Nombre del producto</label>
+                <input required type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
               </div>
               <div className="form-group">
                 <label>Precio ($)</label>
-                <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+                <input required type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
               </div>
               <div className="form-group">
-                <label>Categoría</label>
-                <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} />
+                <label>Categoria</label>
+                <input required type="text" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
               </div>
               <div className="modal-actions">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="btn-cancel">Cancelar</button>
